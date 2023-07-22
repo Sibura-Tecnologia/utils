@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Calculadora de Rota</title>
+</head>
+<body>
+    <h1>Calculadora de Rota</h1>
+
+    <h1>Geocodificação de CEP</h1>
+
+    <div>
+        <label for="cep">CEP Origem:</label>
+        <input type="text" id="cepOrigem">
+    </div>
+
+    <button onclick="obterCoordenadasOrigem()">Obter Coordenadas Origem</button>
+
+    <div>
+        <label for="cep">CEP Destino:</label>
+        <input type="text" id="cepDestino">
+    </div>
+
+    <button onclick="obterCoordenadasDestino()">Obter Coordenadas Destino</button>
+
+    <button onclick="calcularRota()">Calcular Rota</button>
+
+    <div id="resultado"></div>
+
+    <script>
+
+        let latitudeOrigem = 0
+        let longitudeOrigem = 0
+
+        let latitudeDestino = 0
+        let longitudeDestino = 0
+
+        async function obterCoordenadasOrigem() {
+            const cep = document.getElementById("cepOrigem").value;
+
+            // URL da API do Open Street Map Nominatim
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${cep},Brazil`;
+
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.length > 0) {
+                    console.log(data[0].lat)
+                    latitudeOrigem = data[0].lat;
+                    longitudeOrigem = data[0].lon;
+                    const resultadoDiv = document.getElementById("resultado");
+                resultadoDiv.innerHTML = `Latitude: ${latitudeOrigem}, Longitude: ${longitudeOrigem}`;
+                } else {
+                    const resultadoDiv = document.getElementById("resultado");
+                    resultadoDiv.innerHTML = "Nenhuma coordenada encontrada para o CEP informado.";
+                }
+            } catch (error) {
+                console.error("Erro ao obter coordenadas:", error);
+            }
+        }
+
+        async function obterCoordenadasDestino() {
+            const cep = document.getElementById("cepDestino").value;
+
+            console.log(cep)
+
+            // URL da API do Open Street Map Nominatim
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${cep},Brazil`;
+
+            // Faz a solicitação para a API
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.length > 0) {
+                    console.log(data[0].lat)
+                    latitudeDestino = data[0].lat;
+                    longitudeDestino = data[0].lon;
+                    const resultadoDiv = document.getElementById("resultado");
+                resultadoDiv.innerHTML = `Latitude: ${latitudeDestino}, Longitude: ${longitudeDestino}`;
+                } else {
+                    const resultadoDiv = document.getElementById("resultado");
+                    resultadoDiv.innerHTML = "Nenhuma coordenada encontrada para o CEP informado.";
+                }
+            } catch (error) {
+                console.error("Erro ao obter coordenadas:", error);
+            }
+        }
+
+        function calcularRota() {
+
+            // URL da API de rotas do Open Street Map Nominatim
+            const url = `https://router.project-osrm.org/route/v1/driving/${longitudeOrigem},${latitudeOrigem};${longitudeDestino},${latitudeDestino}?geometries=geojson`;
+
+            // Faz a solicitação para a API
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.routes && data.routes.length > 0) {
+                        const distance = (data.routes[0].distance / 1000).toFixed(2);
+                        const duration = (data.routes[0].duration / 60).toFixed(0);
+                        const resultadoDiv = document.getElementById("resultado");
+                        resultadoDiv.innerHTML = `Distância: ${distance} km, Duração: ${duration} minutos`;
+                    } else {
+                        const resultadoDiv = document.getElementById("resultado");
+                        resultadoDiv.innerHTML = "Nenhuma rota encontrada entre as coordenadas informadas.";
+                    }
+                })
+                .catch(error => {
+                    console.error("Erro ao calcular rota:", error);
+                });
+        }
+    </script>
+</body>
+</html>
